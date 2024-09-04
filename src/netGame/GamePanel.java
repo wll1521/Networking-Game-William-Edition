@@ -20,6 +20,9 @@ public class GamePanel extends JPanel{
     long lastBullet = 0;
     long bulletCooldown = 300;
 
+    int GAME_WIDTH = 571;
+    int GAME_HEIGHT = 600;
+
     public GamePanel(){
         super();
         this.setFocusable(true);
@@ -84,8 +87,11 @@ public class GamePanel extends JPanel{
             g2dRotated.drawRenderedImage(scaledSprite, rotation);
 
             // Draw the transformed image
-            g2d.drawImage(rotated, (int) Math.floor(entity.x), (int) Math.floor(entity.y), null);
+            g2d.drawImage(rotated, (int) Math.floor(entity.x - (double) entity.width /2), (int) Math.floor(entity.y - (double) entity.height /2), null);
         }
+        // Draw the border
+        g2d.setStroke(new BasicStroke(5));
+        g2d.drawRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     }
 
     private void physUpdate(){
@@ -163,6 +169,17 @@ public class GamePanel extends JPanel{
                         playerMovementVec[0] = 0;
                         playerMovementVec[1] = 0;
                     }
+                }
+            }
+            // Clamp position within the map
+            if(entity.x < 0 || entity.x > GAME_WIDTH || entity.y < 0 || entity.y > GAME_HEIGHT){
+                if(entity instanceof BulletEntity)
+                    ctx.worldEntities.remove(entity);
+                if(entity instanceof PlayerEntity){
+                    entity.x = Math.max(entity.x, 0);
+                    entity.x = Math.min(entity.x, GAME_WIDTH);
+                    entity.y = Math.max(entity.y, 0);
+                    entity.y = Math.min(entity.y, GAME_HEIGHT);
                 }
             }
         }
