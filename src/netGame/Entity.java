@@ -1,9 +1,15 @@
 package netGame;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 public abstract class Entity {
-    public int x;
-    public int y;
+    public float x;
+    public float y;
+    public int height = 25;
+    public int width = 25;
+    public float angle = 0;
+    public float weight = 1.0F;
+    public ArrayList<float[]> physVecs = new ArrayList<>();
     public abstract BufferedImage getSprite();
 }
