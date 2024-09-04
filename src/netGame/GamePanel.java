@@ -7,13 +7,15 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.util.HashSet;
+import java.util.Set;
 
 public class GamePanel extends JPanel{
     WorldContext ctx = new WorldContext();
+    Set<Integer> downKeys = new HashSet<Integer>();
     Entity player;
+    float[] playerMovementVec;
     long lastTick; // Helper var for physics engine
 
     public GamePanel(){
@@ -24,6 +26,8 @@ public class GamePanel extends JPanel{
         // Spawn player
         this.ctx.worldEntities.add(new PlayerEntity());
         this.player = this.ctx.worldEntities.get(0);
+        this.player.physVecs.add(new float[] {0,0});
+        this.playerMovementVec = this.player.physVecs.get(0);
         player.x = 100;
         player.y = 100;
         // Listen for inputs
@@ -31,22 +35,13 @@ public class GamePanel extends JPanel{
             @Override
             public void keyPressed(KeyEvent e) {
                 super.keyPressed(e);
-                if(e.getKeyCode() == KeyEvent.VK_RIGHT)
-                    player.angle = (player.angle + 30) % 360;
-                if(e.getKeyCode() == KeyEvent.VK_LEFT){
-                    player.angle -= 30;
-                    if(player.angle < 0)
-                        player.angle += 360;
-                }
-                if(e.getKeyCode() == KeyEvent.VK_UP) {
-                    var angle = Math.toRadians(player.angle);
-                    float speed = 0.5f;
-                    float sin = (float) Math.sin(angle);
-                    float cos = (float) Math.cos(angle);
-                    player.physVecs.add(new float[]{sin * speed, speed * -1 * cos});
-                }
-                revalidate();
-                repaint();
+                downKeys.add(e.getKeyCode());
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                super.keyReleased(e);
+                downKeys.remove(e.getKeyCode());
             }
         });
         ActionListener action = new ActionListener() {
@@ -92,19 +87,43 @@ public class GamePanel extends JPanel{
     }
 
     private void physUpdate(){
+        //Process player input
+        for(var key : downKeys){
+            var angle = Math.toRadians(player.angle);
+            double sin = Math.sin(angle);
+            double cos = Math.cos(angle);
+            double playerSpeed = 1.2;
+
+            if(key == KeyEvent.VK_RIGHT)
+                player.rotationVec = 0.9f;
+            if(key == KeyEvent.VK_LEFT)
+                player.rotationVec = -0.9F;
+            if(key == KeyEvent.VK_UP){
+                playerMovementVec[0] = (float) (playerSpeed * sin);
+                playerMovementVec[1] = (float) (playerSpeed * cos * -1);
+            }
+        }
         if(this.lastTick == 0){
             this.lastTick = System.currentTimeMillis();
         }
         // Physics engine...
         double FRICTION_COEFFICIENT = 0.95;
-        double STOP_POINT = 0.3;
+        double STOP_POINT = 0.1;
         // Push objects...
         long curTime = System.currentTimeMillis();
         long delta = curTime - lastTick;
-        float moveAmount = (float) delta/1000f;
+        lastTick = curTime;
+        float moveAmount = (float) delta/6;
 
         for (int i = 0; i < this.ctx.worldEntities.size(); i++){
             var entity = ctx.worldEntities.get(i);
+            if(entity.rotationVec != 0){
+                entity.angle += moveAmount * entity.rotationVec;
+                entity.rotationVec *= (float) FRICTION_COEFFICIENT;
+                if(Math.abs(entity.rotationVec) < STOP_POINT )
+                    entity.rotationVec = 0;
+                entity.angle %= 360;
+            }
             // Process all phys vectors on each entity
             for (int j = entity.physVecs.size() - 1; j >= 0; j--) {
                 float[] vec = entity.physVecs.get(j);
@@ -117,7 +136,12 @@ public class GamePanel extends JPanel{
 
                 // Remove vector if below stop point
                 if (magnitude < STOP_POINT) {
-                    entity.physVecs.remove(j);
+                    if(vec != playerMovementVec)
+                        entity.physVecs.remove(j);
+                    else{
+                        playerMovementVec[0] = 0;
+                        playerMovementVec[1] = 0;
+                    }
                 }
             }
         }
