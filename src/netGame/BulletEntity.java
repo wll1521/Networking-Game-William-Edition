@@ -6,7 +6,10 @@ import java.io.File;
 
 public class BulletEntity extends Entity{
     private BufferedImage sprite;
+    public float fireTime;
     public BulletEntity(){
+        width = 7;
+        height = 7;
     }
     @Override
     public BufferedImage getSprite() {

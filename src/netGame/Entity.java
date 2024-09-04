@@ -13,4 +13,11 @@ public abstract class Entity {
     public float rotationVec = 0.0f;
     public ArrayList<float[]> physVecs = new ArrayList<>();
     public abstract BufferedImage getSprite();
+
+    public boolean checkCollision(Entity e){
+        if(Math.abs(this.x - e.x) <= width)
+            if(Math.abs(this.y - e.y) <= height)
+                return true;
+        return false;
+    }
 }

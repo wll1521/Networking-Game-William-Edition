@@ -55,7 +55,8 @@ public class GamePanel extends JPanel{
                 physUpdate();
             }
         };
-        Timer physTimer = new Timer(60/1000, action);
+        // Schedule physics engine to run  10 microseconds
+        Timer physTimer = new Timer(10, action);
         physTimer.start();
     }
 
@@ -97,6 +98,12 @@ public class GamePanel extends JPanel{
     private void physUpdate(){
         //Process player input
         for(var key : downKeys){
+            if(key == KeyEvent.VK_R){
+                ((PlayerEntity) player).isDestroyed = false;
+            }
+            if(((PlayerEntity) this.player).isDestroyed){
+                break;
+            }
             var angle = Math.toRadians(player.angle);
             double sin = Math.sin(angle);
             double cos = Math.cos(angle);
@@ -112,6 +119,10 @@ public class GamePanel extends JPanel{
                 playerMovementVec[0] = (float) (playerSpeed * sin);
                 playerMovementVec[1] = (float) (playerSpeed * cos * -1);
             }
+            if(key == KeyEvent.VK_DOWN){
+                playerMovementVec[0] = (float) (playerSpeed * sin * -1);
+                playerMovementVec[1] = (float) (playerSpeed * cos);
+            }
             if(key == KeyEvent.VK_SPACE){
                 long bulletDiff = System.currentTimeMillis() - lastBullet;
                 if(bulletDiff > bulletCooldown) {
@@ -122,7 +133,11 @@ public class GamePanel extends JPanel{
                     bullet.x = player.x;
                     bullet.y = player.y;
                     bullet.angle = player.angle;
+                    ((BulletEntity) bullet).fireTime = System.currentTimeMillis();
                     bullet.physVecs.add(new float[]{(float) (bulletSpeed * sin), (float) (bulletSpeed * cos * -1)});
+                    // Apply recoil
+                    float[] recoil = {(float) (2.5* sin * -1), (float) (2.5 * cos)};
+                    player.physVecs.add(recoil);
                 }
             }
         }
@@ -173,13 +188,27 @@ public class GamePanel extends JPanel{
             }
             // Clamp position within the map
             if(entity.x < 0 || entity.x > GAME_WIDTH || entity.y < 0 || entity.y > GAME_HEIGHT){
-                if(entity instanceof BulletEntity)
-                    ctx.worldEntities.remove(entity);
+                if(entity instanceof BulletEntity){
+                    for(int j = 0; j < entity.physVecs.size(); j++){
+                        var vec =entity.physVecs.get(j);
+                        vec[0] *= -1;
+                        vec[1] *= -1;
+                    }
+                }
                 if(entity instanceof PlayerEntity){
                     entity.x = Math.max(entity.x, 0);
                     entity.x = Math.min(entity.x, GAME_WIDTH);
                     entity.y = Math.max(entity.y, 0);
                     entity.y = Math.min(entity.y, GAME_HEIGHT);
+                }
+            }
+            // Check for other collisions
+            for(int j = ctx.worldEntities.size() - 1; j > i; j--){
+                var e = ctx.worldEntities.get(j);
+                if(entity.checkCollision(e)){
+                    if(entity instanceof PlayerEntity && e instanceof BulletEntity){
+                        //((PlayerEntity)player).isDestroyed = true;
+                    }
                 }
             }
         }
