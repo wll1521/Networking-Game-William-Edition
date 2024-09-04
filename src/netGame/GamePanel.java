@@ -17,6 +17,8 @@ public class GamePanel extends JPanel{
     Entity player;
     float[] playerMovementVec;
     long lastTick; // Helper var for physics engine
+    long lastBullet = 0;
+    long bulletCooldown = 300;
 
     public GamePanel(){
         super();
@@ -94,13 +96,28 @@ public class GamePanel extends JPanel{
             double cos = Math.cos(angle);
             double playerSpeed = 1.2;
 
-            if(key == KeyEvent.VK_RIGHT)
-                player.rotationVec = 0.9f;
-            if(key == KeyEvent.VK_LEFT)
-                player.rotationVec = -0.9F;
+            if(key == KeyEvent.VK_RIGHT) {
+                player.rotationVec = 1.0f;
+            }
+            if(key == KeyEvent.VK_LEFT) {
+                player.rotationVec = -1.0f;
+            }
             if(key == KeyEvent.VK_UP){
                 playerMovementVec[0] = (float) (playerSpeed * sin);
                 playerMovementVec[1] = (float) (playerSpeed * cos * -1);
+            }
+            if(key == KeyEvent.VK_SPACE){
+                long bulletDiff = System.currentTimeMillis() - lastBullet;
+                if(bulletDiff > bulletCooldown) {
+                    lastBullet = System.currentTimeMillis();
+                    float bulletSpeed = 10;
+                    ctx.worldEntities.add(new BulletEntity());
+                    var bullet = ctx.worldEntities.get(ctx.worldEntities.size() - 1);
+                    bullet.x = player.x;
+                    bullet.y = player.y;
+                    bullet.angle = player.angle;
+                    bullet.physVecs.add(new float[]{(float) (bulletSpeed * sin), (float) (bulletSpeed * cos * -1)});
+                }
             }
         }
         if(this.lastTick == 0){
@@ -108,14 +125,14 @@ public class GamePanel extends JPanel{
         }
         // Physics engine...
         double FRICTION_COEFFICIENT = 0.95;
-        double STOP_POINT = 0.1;
+        double STOP_POINT = 0.6;
         // Push objects...
         long curTime = System.currentTimeMillis();
         long delta = curTime - lastTick;
         lastTick = curTime;
         float moveAmount = (float) delta/6;
 
-        for (int i = 0; i < this.ctx.worldEntities.size(); i++){
+        for (int i = this.ctx.worldEntities.size()-1; i >= 0; i--){
             var entity = ctx.worldEntities.get(i);
             if(entity.rotationVec != 0){
                 entity.angle += moveAmount * entity.rotationVec;
@@ -136,6 +153,10 @@ public class GamePanel extends JPanel{
 
                 // Remove vector if below stop point
                 if (magnitude < STOP_POINT) {
+                    if(entity instanceof BulletEntity){
+                        ctx.worldEntities.remove(entity);
+                        continue;
+                    }
                     if(vec != playerMovementVec)
                         entity.physVecs.remove(j);
                     else{
