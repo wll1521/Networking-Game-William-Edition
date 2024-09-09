@@ -7,5 +7,6 @@ public class WorldContext {
     public ArrayList<Entity> bullets;
     public WorldContext(){
         this.tanks = new ArrayList<>();
+        this.bullets = new ArrayList<>();
     }
 }
