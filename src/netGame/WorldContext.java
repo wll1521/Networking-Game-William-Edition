@@ -3,8 +3,10 @@ package netGame;
 import java.util.ArrayList;
 
 public class WorldContext {
-    public ArrayList<Entity> worldEntities;
+    public ArrayList<PlayerEntity> tanks;
+    public ArrayList<Entity> bullets;
     public WorldContext(){
-        this.worldEntities = new ArrayList<>();
+        this.tanks = new ArrayList<>();
+        this.bullets = new ArrayList<>();
     }
 }
