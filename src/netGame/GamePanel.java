@@ -29,8 +29,8 @@ public class GamePanel extends JPanel{
         this.requestFocus();
         this.setPreferredSize(new Dimension(800, 600));
         // Spawn player
-        this.ctx.worldEntities.add(new PlayerEntity());
-        this.player = this.ctx.worldEntities.get(0);
+        this.ctx.tanks.add(new PlayerEntity());
+        this.player = this.ctx.tanks.get(0);
         this.player.physVecs.add(new float[] {0,0});
         this.playerMovementVec = this.player.physVecs.get(0);
         player.x = 100;
@@ -64,7 +64,7 @@ public class GamePanel extends JPanel{
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         var g2d = (Graphics2D) g;
-        for (var entity : this.ctx.worldEntities) {
+        for (var entity : this.ctx.tanks) {
             BufferedImage sprite = entity.getSprite();
             double angle = Math.toRadians(entity.angle);
 
@@ -124,21 +124,7 @@ public class GamePanel extends JPanel{
                 playerMovementVec[1] = (float) (playerSpeed * cos);
             }
             if(key == KeyEvent.VK_SPACE){
-                long bulletDiff = System.currentTimeMillis() - lastBullet;
-                if(bulletDiff > bulletCooldown) {
-                    lastBullet = System.currentTimeMillis();
-                    float bulletSpeed = 10;
-                    ctx.worldEntities.add(new BulletEntity());
-                    var bullet = ctx.worldEntities.get(ctx.worldEntities.size() - 1);
-                    bullet.x = player.x;
-                    bullet.y = player.y;
-                    bullet.angle = player.angle;
-                    ((BulletEntity) bullet).fireTime = System.currentTimeMillis();
-                    bullet.physVecs.add(new float[]{(float) (bulletSpeed * sin), (float) (bulletSpeed * cos * -1)});
-                    // Apply recoil
-                    float[] recoil = {(float) (2.5* sin * -1), (float) (2.5 * cos)};
-                    player.physVecs.add(recoil);
-                }
+                // Todo: fire bullet
             }
         }
         if(this.lastTick == 0){
@@ -153,8 +139,8 @@ public class GamePanel extends JPanel{
         lastTick = curTime;
         float moveAmount = (float) delta/6;
 
-        for (int i = this.ctx.worldEntities.size()-1; i >= 0; i--){
-            var entity = ctx.worldEntities.get(i);
+        for (int i = this.ctx.tanks.size()-1; i >= 0; i--){
+            var entity = ctx.tanks.get(i);
             if(entity.rotationVec != 0){
                 entity.angle += moveAmount * entity.rotationVec;
                 entity.rotationVec *= (float) FRICTION_COEFFICIENT;
@@ -175,7 +161,7 @@ public class GamePanel extends JPanel{
                 // Remove vector if below stop point
                 if (magnitude < STOP_POINT) {
                     if(entity instanceof BulletEntity){
-                        ctx.worldEntities.remove(entity);
+                        ctx.tanks.remove(entity);
                         continue;
                     }
                     if(vec != playerMovementVec)
@@ -202,15 +188,7 @@ public class GamePanel extends JPanel{
                     entity.y = Math.min(entity.y, GAME_HEIGHT);
                 }
             }
-            // Check for other collisions
-            for(int j = ctx.worldEntities.size() - 1; j > i; j--){
-                var e = ctx.worldEntities.get(j);
-                if(entity.checkCollision(e)){
-                    if(entity instanceof PlayerEntity && e instanceof BulletEntity){
-                        //((PlayerEntity)player).isDestroyed = true;
-                    }
-                }
-            }
+            // TODO: Check for collisions
         }
         super.repaint();
     }
