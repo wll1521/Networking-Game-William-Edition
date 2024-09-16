@@ -18,34 +18,8 @@ public class Main {
 
         // Create 2 panels
         JPanel gamePanel = new GamePanel();
-        JPanel chatPanel = new JPanel();
-        chatPanel.setLayout(new BorderLayout());
+        var chatPanel = new ChatPanel();
         chatPanel.setBorder(new LineBorder(Color.BLACK));
-
-        // Creates chat components
-        JTextArea chatArea = new JTextArea();
-        chatArea.setEditable(false); // Player can't edit
-        chatArea.setLineWrap(true);  // Wraps text to fit the area
-        chatArea.setWrapStyleWord(true);
-
-        JScrollPane scrollPane = new JScrollPane(chatArea);
-        JTextField chatInput = new JTextField();
-
-        chatInput.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String message = chatInput.getText();
-                if (!message.isEmpty()) {
-                    chatArea.append("You: " + message + "\n");
-                    chatInput.setText("");
-                    gamePanel.requestFocusInWindow();  //Refocuses back to game after input
-                }
-            }
-        });
-
-        // Adds components to chatPanel
-        chatPanel.add(scrollPane, BorderLayout.CENTER);
-        chatPanel.add(chatInput, BorderLayout.SOUTH);
 
         // Size the panels and add to window
         frame.add(gamePanel, BorderLayout.CENTER);
@@ -55,8 +29,6 @@ public class Main {
         gamePanel.setPreferredSize(new Dimension(gameWidth, frame.getHeight()));
         chatPanel.setPreferredSize(new Dimension(chatWidth, frame.getHeight()));
         frame.revalidate();
-
-        chatPanel.setBackground(Color.decode("#47FD8D"));
 
         frame.pack();
         frame.revalidate();
