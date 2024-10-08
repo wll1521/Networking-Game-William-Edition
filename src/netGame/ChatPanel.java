@@ -36,4 +36,10 @@ public class ChatPanel extends JPanel {
         this.add(chatInput, BorderLayout.SOUTH);
         this.add(new JLabel("Hello, world!"), BorderLayout.NORTH);
     }
+    public void onMessageGet(String message){
+        System.out.println("We just got a message: " + message);
+    }
+    public void callMeToSendAMessage(String message){
+        System.out.println("You just sent a message: " + message);
+    }
 }
